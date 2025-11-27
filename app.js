@@ -657,4 +657,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-[file content end]
