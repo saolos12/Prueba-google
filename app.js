@@ -1,5 +1,4 @@
-[file name]: app.js
-[file content begin]
+
 /**
  * GLOBAL INSIGHT CORE SYSTEM
  * Módulo de gestión de contenidos y telemetría.
@@ -514,4 +513,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-[file content end]
