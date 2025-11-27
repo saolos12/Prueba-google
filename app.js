@@ -13,6 +13,14 @@ const CONFIG = {
 };
 
 // Configuración de Firebase (REEMPLAZA CON TUS PROPIAS CREDENCIALES)
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCZxRHndnpjYCvWG-kZYKDWpyqCN_UAOWY",
   authDomain: "recoleccion-datos-a78a6.firebaseapp.com",
@@ -23,6 +31,9 @@ const firebaseConfig = {
   measurementId: "G-5Z0VCWZD4S"
 };
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 const newsDatabase = [
     { title: "Avance Histórico en Inteligencia Artificial Generativa", category: "Tecnología" },
     { title: "Mercados Asiáticos Cierran al Alza tras Anuncios", category: "Economía" },
@@ -449,3 +460,4 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
